@@ -1,0 +1,6 @@
+// TypeScript config for local build tooling.
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": { "types": ["node"] },
+  "references": [{ "path": "../shared/" }]
+}

@@ -10,10 +10,8 @@ const ABILITIES = [
 ] as const;
 
 export type TransformMeta = {
-  dataBuild: number;
-  liveBuild: number;
-  generatedAt: string;
-  staleThreshold: number;
+  build: number;
+  syncedAt: string;
 };
 
 function isNamed(raw: { name: string; class_name: string }): boolean {
@@ -93,11 +91,9 @@ export function transform(
 
   return {
     meta: {
-      dataBuild: meta.dataBuild,
-      liveBuild: meta.liveBuild,
-      stale: meta.liveBuild - meta.dataBuild > meta.staleThreshold,
+      build: meta.build,
+      syncedAt: meta.syncedAt,
       source: "hosted-api",
-      generatedAt: meta.generatedAt,
     },
     entries,
     index,

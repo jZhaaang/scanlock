@@ -31,11 +31,9 @@ export type Entry = {
 };
 
 export type SnapshotMeta = {
-  dataBuild: number;
-  liveBuild: number;
-  stale: boolean;
+  build: number;
+  syncedAt: string;
   source: "hosted-api";
-  generatedAt: string;
 };
 
 export type NameIndex = {

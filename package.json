@@ -7,6 +7,7 @@
   "scripts": {
     "build": "npm run build:server -- --metafile=dist/server.meta.json --minify",
     "build:server": "esbuild --bundle --log-level=warning --sourcemap=linked --target=es2023 --format=cjs --outdir=dist/server --platform=node src/server/index.ts",
+    "build-snapshot": "node --experimental-strip-types --no-warnings=ExperimentalWarning src/tools/build-snapshot.ts",
     "clean": "rm -rf dist/",
     "watch": "npm run build:server -- --watch=forever",
     "format": "npm run lint -- --fix",
