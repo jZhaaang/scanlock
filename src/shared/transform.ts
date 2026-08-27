@@ -122,7 +122,11 @@ export function transform(
   }
 
   return {
-    meta: { build: meta.build, syncedAt: meta.syncedAt, source: "hosted-api" },
+    meta: {
+      build: meta.build,
+      syncedAt: meta.syncedAt,
+      source: "deadlock-api",
+    },
     entries,
     index,
   };

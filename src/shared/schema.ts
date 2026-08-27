@@ -45,7 +45,7 @@ export type Upgrade = {
 export type SnapshotMeta = {
   build: number;
   syncedAt: string;
-  source: "hosted-api";
+  source: "deadlock-api";
 };
 
 export type NameIndex = {
