@@ -1,5 +1,5 @@
 import { mkdir, writeFile } from "node:fs/promises";
-import type { RawHero, RawItem } from "../shared/raw.ts";
+import type { RawAsset, RawHero } from "../shared/raw.ts";
 import { transform } from "../shared/transform.ts";
 
 const BASE = "https://api.deadlock-api.com/v1/assets";
@@ -18,7 +18,7 @@ if (build === undefined) throw new Error("client-versions was empty");
 const query = `?language=english&client_version=${build}`;
 
 const [items, heroes] = await Promise.all([
-  get<RawItem[]>(`/items${query}`),
+  get<RawAsset[]>(`/items${query}`),
   get<RawHero[]>(`/heroes${query}`),
 ]);
 

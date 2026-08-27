@@ -1,6 +1,14 @@
+import { sanitize } from "./markup.ts";
 import { loosen, normalize } from "./normalize.ts";
-import type { RawHero, RawItem } from "./raw.ts";
-import type { Entry, NameIndex, Snapshot, Stat } from "./schema.ts";
+import type { RawAbility, RawAsset, RawHero, RawShopItem } from "./raw.ts";
+import type {
+  Entry,
+  EntryKind,
+  NameIndex,
+  Snapshot,
+  Upgrade,
+} from "./schema.ts";
+import { changesFor, sectionsFor } from "./stats.ts";
 
 const ABILITIES = [
   "signature1",
@@ -18,17 +26,44 @@ function isNamed(raw: { name: string; class_name: string }): boolean {
   return raw.name !== "" && raw.name !== raw.class_name;
 }
 
-function statsFor(_raw: RawItem): Stat[] {
-  return [];
+/** Use the ability upgrade tier's own text when the game ships one, otherwise list what changed */
+function upgradesFor(raw: RawAbility): Upgrade[] {
+  const out: Upgrade[] = [];
+
+  for (const [i, upgrade] of (raw.upgrades ?? []).entries()) {
+    const tier = i + 1;
+
+    const text = sanitize(raw.description?.[`t${tier}_desc`]);
+    if (text) {
+      out.push({ tier, text });
+      continue;
+    }
+
+    // doesn't ship with text
+    const changes = changesFor(raw, upgrade.property_upgrades ?? []);
+    if (changes.length) out.push({ tier, changes });
+  }
+
+  return out;
+}
+
+/** The fields every entry has, whatever the kind (item/ability) */
+function baseEntry(raw: RawAsset, kind: EntryKind): Entry {
+  return {
+    id: raw.class_name,
+    kind,
+    name: raw.name,
+    sections: sectionsFor(raw),
+  };
 }
 
 export function transform(
-  items: RawItem[],
+  items: RawAsset[],
   heroes: RawHero[],
   meta: TransformMeta,
 ): Snapshot {
   const shopItems = items.filter(
-    (i) =>
+    (i): i is RawShopItem =>
       i.type === "upgrade" &&
       i.shopable === true &&
       i.disabled !== true &&
@@ -36,12 +71,10 @@ export function transform(
   );
 
   const liveHeroes = heroes.filter(
-    (h) =>
-      h.player_selectable === true &&
-      h.disabled !== true &&
-      h.in_development !== true,
+    (h) => h.player_selectable === true && h.disabled !== true,
   );
 
+  // map: ability class_name -> hero that owns it, which slot
   const owner = new Map<string, { hero: string; slot: number }>();
   for (const hero of liveHeroes) {
     ABILITIES.forEach((ability, slot) => {
@@ -50,34 +83,33 @@ export function transform(
     });
   }
 
-  const abilities = items.filter((i) => owner.has(i.class_name) && isNamed(i));
+  const abilities = items.filter(
+    (i): i is RawAbility =>
+      i.type === "ability" && owner.has(i.class_name) && isNamed(i),
+  );
 
   const entries: Record<string, Entry> = {};
 
   for (const raw of shopItems) {
     entries[raw.class_name] = {
-      id: raw.class_name,
-      kind: "item",
-      name: raw.name,
-      stats: statsFor(raw),
-      ...(raw.cost !== undefined ? { cost: raw.cost } : {}),
-      ...(raw.item_tier !== undefined ? { tier: raw.item_tier } : {}),
-      ...(raw.item_slot_type !== undefined ? { slot: raw.item_slot_type } : {}),
-      ...(raw.activation !== undefined ? { activation: raw.activation } : {}),
-      ...(raw.component_items !== undefined
-        ? { components: raw.component_items }
-        : {}),
+      ...baseEntry(raw, "item"),
+      cost: raw.cost,
+      tier: raw.item_tier,
+      slot: raw.item_slot_type,
+      activation: raw.activation,
+      components: raw.component_items,
+      legendary: raw.item_tier === 5 || undefined,
     };
   }
 
   for (const raw of abilities) {
     const own = owner.get(raw.class_name);
+    const upgrades = upgradesFor(raw);
     entries[raw.class_name] = {
-      id: raw.class_name,
-      kind: "ability",
-      name: raw.name,
-      stats: statsFor(raw),
-      ...(own ? { hero: own.hero, abilitySlot: own.slot } : {}),
+      ...baseEntry(raw, "ability"),
+      hero: own?.hero,
+      abilitySlot: own?.slot,
+      upgrades: upgrades.length ? upgrades : undefined,
     };
   }
 
@@ -90,11 +122,7 @@ export function transform(
   }
 
   return {
-    meta: {
-      build: meta.build,
-      syncedAt: meta.syncedAt,
-      source: "hosted-api",
-    },
+    meta: { build: meta.build, syncedAt: meta.syncedAt, source: "hosted-api" },
     entries,
     index,
   };

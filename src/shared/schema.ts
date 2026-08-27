@@ -1,12 +1,17 @@
 export type EntryKind = "item" | "ability";
 export type ItemSlot = "weapon" | "spirit" | "vitality";
+export type SectionKind = "innate" | "passive" | "active";
 
 export type Stat = {
   label: string;
   value: string;
-  prefix?: string;
-  postfix?: string;
   elevated: boolean;
+};
+
+export type Section = {
+  kind?: SectionKind;
+  desc?: string;
+  stats: Stat[];
 };
 
 export type Entry = {
@@ -20,14 +25,21 @@ export type Entry = {
   slot?: ItemSlot;
   activation?: string;
   components?: string[];
+  legendary?: boolean;
 
   // for abilities
   hero?: string;
   abilitySlot?: number;
-  upgrades?: { tier: number; text: string }[];
+  upgrades?: Upgrade[];
 
-  desc?: string;
-  stats: Stat[];
+  sections: Section[];
+};
+
+export type Upgrade = {
+  /** 1-3, abilities only */
+  tier: number;
+  text?: string;
+  changes?: Stat[];
 };
 
 export type SnapshotMeta = {
