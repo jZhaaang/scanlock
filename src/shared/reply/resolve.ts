@@ -1,5 +1,5 @@
-import { loosen, normalize } from "./normalize.ts";
-import type { NameIndex } from "./schema.ts";
+import { loosen, normalize } from "../normalize.ts";
+import type { NameIndex } from "../schema.ts";
 
 /** Which stage matched, or that none did */
 export type MatchKind = "exact" | "loose" | "none";

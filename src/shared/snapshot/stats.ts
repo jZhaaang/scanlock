@@ -1,3 +1,4 @@
+import type { Section, SectionKind, Stat } from "../schema.ts";
 import { sanitize } from "./markup.ts";
 import type {
   RawAbility,
@@ -6,7 +7,6 @@ import type {
   RawShopItem,
   RawTooltipSection,
 } from "./raw.ts";
-import type { Section, SectionKind, Stat } from "./schema.ts";
 
 /** Ability header pills */
 const HEADER = [

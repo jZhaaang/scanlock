@@ -1,6 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
-import type { RawAsset, RawHero } from "../shared/raw.ts";
-import { transform } from "../shared/transform.ts";
+import type { RawAsset, RawHero } from "../shared/snapshot/raw.ts";
+import { transform } from "../shared/snapshot/transform.ts";
 
 const BASE = "https://api.deadlock-api.com/v1/assets";
 const OUT = "data/snapshot.json";

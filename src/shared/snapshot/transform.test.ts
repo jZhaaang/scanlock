@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import type { Entry, Snapshot } from "../schema.ts";
 import type {
   RawAbility,
   RawAsset,
@@ -7,7 +8,6 @@ import type {
   RawProperty,
   RawShopItem,
 } from "./raw.ts";
-import type { Entry, Snapshot } from "./schema.ts";
 import { transform } from "./transform.ts";
 
 const META = { build: 1, syncedAt: "2026-01-01T00:00:00.000Z" };

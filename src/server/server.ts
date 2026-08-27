@@ -12,7 +12,7 @@ import type {
 } from "@devvit/web/shared";
 import { isT1, isT3 } from "@devvit/web/shared";
 import { Endpoint, EndpointMethod, type ErrorRsp } from "../shared/api.ts";
-import { extractTokens } from "../shared/brackets.ts";
+import { extractTokens } from "../shared/reply/brackets.ts";
 
 type AnyRsp = UiResponse | TriggerResponse | ErrorRsp;
 

@@ -1,13 +1,13 @@
-import { sanitize } from "./markup.ts";
-import { loosen, normalize } from "./normalize.ts";
-import type { RawAbility, RawAsset, RawHero, RawShopItem } from "./raw.ts";
+import { loosen, normalize } from "../normalize.ts";
 import type {
   Entry,
   EntryKind,
   NameIndex,
   Snapshot,
   Upgrade,
-} from "./schema.ts";
+} from "../schema.ts";
+import { sanitize } from "./markup.ts";
+import type { RawAbility, RawAsset, RawHero, RawShopItem } from "./raw.ts";
 import { changesFor, sectionsFor } from "./stats.ts";
 
 const ABILITIES = [

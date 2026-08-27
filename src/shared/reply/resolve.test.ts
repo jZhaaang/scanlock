@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import type { NameIndex } from "../schema.ts";
 import { resolve, resolveAll } from "./resolve.ts";
-import type { NameIndex } from "./schema.ts";
 
 const INDEX: NameIndex = {
   exact: {
