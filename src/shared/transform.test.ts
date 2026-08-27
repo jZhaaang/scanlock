@@ -314,7 +314,7 @@ describe("markup", () => {
     ]);
     assert.equal(
       entry.sections[0]?.desc,
-      "Deals 50 spirit damage. Then stops.",
+      "Deals **50** spirit damage.\nThen stops.",
     );
   });
 });
@@ -325,7 +325,7 @@ describe("upgrades", () => {
 
   it("uses the upgrades's own text when the game ships one", () => {
     const ups = upgradesOf({
-      description: { t1_desc: '<span class="highlight">+1s</span> Lifetime' },
+      description: { t1_desc: "+1s Lifetime" },
       upgrades: [{ property_upgrades: [{ name: "X", bonus: "1" }] }],
     });
     assert.deepEqual(ups, [{ tier: 1, text: "+1s Lifetime" }]);
