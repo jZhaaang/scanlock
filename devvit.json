@@ -3,11 +3,22 @@
   "name": "scanlock",
   "server": {},
   "permissions": {
-    "reddit": { "enable": true }
+    "reddit": { "enable": true },
+    "redis": true,
+    "http": { "enable": true, "domains": ["api.deadlock-api.com"] }
   },
   "triggers": {
+    "onAppInstall": "/internal/on/app/install",
     "onCommentCreate": "/internal/on/comment/create",
     "onPostCreate": "/internal/on/post/create"
+  },
+  "scheduler": {
+    "tasks": {
+      "sync-assets": {
+        "endpoint": "/internal/scheduler/sync",
+        "cron": "00 * * * *"
+      }
+    }
   },
   "dev": {
     "subreddit": "scanlock_test"

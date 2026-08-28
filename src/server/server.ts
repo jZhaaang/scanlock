@@ -1,6 +1,6 @@
 import { once } from "node:events";
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { context, reddit } from "@devvit/web/server";
+import { context, reddit, type TaskResponse } from "@devvit/web/server";
 import type {
   OnCommentCreateRequest,
   OnPostCreateRequest,
@@ -13,8 +13,12 @@ import type {
 import { isT1, isT3 } from "@devvit/web/shared";
 import { Endpoint, EndpointMethod, type ErrorRsp } from "../shared/api.ts";
 import { extractTokens } from "../shared/reply/brackets.ts";
+import { renderReply } from "../shared/reply/render.ts";
+import { resolveAll } from "../shared/reply/resolve.ts";
+import { readEntries, readHead } from "./store.ts";
+import { sync } from "./sync.ts";
 
-type AnyRsp = UiResponse | TriggerResponse | ErrorRsp;
+type AnyRsp = UiResponse | TriggerResponse | TaskResponse | ErrorRsp;
 
 export async function onReq(
   reqMsg: IncomingMessage,
@@ -41,6 +45,10 @@ async function route(
     rsp = { error: "not found", status: 404 };
   } else {
     switch (endpoint) {
+      case Endpoint.OnAppInstall:
+      case Endpoint.SchedulerSync:
+        rsp = await routeSync();
+        break;
       case Endpoint.OnCommentCreate:
         rsp = await routeCommentCreate(reqMsg);
         break;
@@ -55,6 +63,11 @@ async function route(
   }
 
   writeJson<PartialJsonValue>("status" in rsp ? rsp.status : 200, rsp, rspMsg);
+}
+
+async function routeSync(): Promise<TaskResponse> {
+  console.log((await sync()) ? "synced" : "already current");
+  return {};
 }
 
 async function routeCommentCreate(
@@ -83,14 +96,25 @@ async function respond(
   if (author === context.appSlug) return {};
 
   const tokens = extractTokens(text);
-  console.log(
-    `id=${id} author=${author} text=${text} tokens=${JSON.stringify(tokens)}`,
-  );
   if (!tokens.length) return {};
 
+  const head = await readHead();
+  if (!head) {
+    console.warn(`no snapshot; id=${id} tokens=${tokens.length}`);
+    return {};
+  }
+
+  // one bullet per token, take first id it lands on
+  const ids = resolveAll(tokens, head.index).flatMap((r) => r.ids.slice(0, 1));
+  if (!ids.length) return {};
+
+  const entries = await readEntries(head.meta.build, ids);
+  if (!entries.length) return {};
+
+  console.log(`id=${id} tokens=${tokens.length} replied=${entries.length}`);
   await reddit.submitComment({
     id,
-    text: `parsed ${tokens.length} token(s): ${tokens.join(", ")}`,
+    text: renderReply(entries, head.meta),
     runAs: "APP",
   });
   return {};
