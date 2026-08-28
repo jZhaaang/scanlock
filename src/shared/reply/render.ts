@@ -116,7 +116,9 @@ export function renderEntry(entry: Entry): string {
  */
 export function renderReply(entries: Entry[], meta: SnapshotMeta): string {
   const bullets = entries.map(renderEntry).join("\n");
-  const footer = `^Call me with up to 5 [[ name ]] ^| ^(Deadlock build ${meta.build}, as of ${meta.syncedAt.slice(0, 10)}) ^| ^(data from deadlock-api.com)`;
+  const contact =
+    "https://www.reddit.com/message/compose/?to=-porkdumpling&subject=Scanlock%20Inquiry";
+  const footer = `^(Call me with up to 5 [[ name ]]) ^| ^(Deadlock build ${meta.build}, as of ${meta.syncedAt.slice(0, 10)}) ^| ^(data from deadlock-api.com) ^| ^([Questions?](${contact}))`;
 
   return `${bullets}\n\n---\n\n${footer}`;
 }
