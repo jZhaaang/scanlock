@@ -19,7 +19,11 @@ export type RawTooltipSection = {
 
 export type RawInfoSection = {
   loc_string?: string;
-  properties_block?: { properties?: { important_property?: string }[] }[];
+  properties_block?: {
+    /** heading above the block, e.g. "On Wall Hit:" */
+    loc_string?: string;
+    properties?: { important_property?: string }[];
+  }[];
   basic_properties?: string[];
 };
 

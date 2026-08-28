@@ -6,6 +6,8 @@ export type Stat = {
   label: string;
   value: string;
   elevated: boolean;
+  /** heading the game groups this stat under, abilities only */
+  group?: string;
 };
 
 export type Section = {

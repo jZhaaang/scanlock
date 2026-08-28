@@ -15,8 +15,11 @@ const HEADER = [
   "AbilityCooldownBetweenCharge",
 ];
 
-/** A property key and whether the game gives it visual weight, we use it for ordering stats */
-type Pick = [key: string, elevated: boolean];
+/**
+ * A property key and whether the game gives it visual weight (we use it for ordering stats) and
+ * the heading it sits under if the block carried one
+ */
+type Pick = { key: string; elevated: boolean; group?: string };
 /** One section before its keys have been resolved against `properties` */
 type Draft = { kind?: SectionKind; desc: string; picks: Pick[] };
 
@@ -36,10 +39,12 @@ function itemDrafts(raw: RawShopItem): Draft[] {
     let desc = "";
 
     for (const attr of section.section_attributes ?? []) {
-      for (const key of attr.elevated_properties ?? []) picks.push([key, true]);
+      for (const key of attr.elevated_properties ?? [])
+        picks.push({ key, elevated: true });
       for (const key of attr.important_properties ?? [])
-        picks.push([key, true]);
-      for (const key of attr.properties ?? []) picks.push([key, false]);
+        picks.push({ key, elevated: true });
+      for (const key of attr.properties ?? [])
+        picks.push({ key, elevated: false });
       if (!desc) desc = sanitize(attr.loc_string);
     }
 
@@ -56,12 +61,17 @@ function abilityDrafts(raw: RawAbility): Draft[] {
     const picks: Pick[] = [];
 
     for (const block of section.properties_block ?? []) {
+      const group = block.loc_string?.trim();
       for (const prop of block.properties ?? []) {
-        if (prop.important_property)
-          picks.push([prop.important_property, true]);
+        const key = prop.important_property;
+        if (!key) continue;
+        const pick: Pick = { key, elevated: true };
+        if (group) pick.group = group;
+        picks.push(pick);
       }
     }
-    for (const key of section.basic_properties ?? []) picks.push([key, false]);
+    for (const key of section.basic_properties ?? [])
+      picks.push({ key, elevated: false });
 
     drafts.push({ desc: sanitize(section.loc_string), picks });
   }
@@ -82,8 +92,8 @@ function display(value: string, prefix = "", postfix = ""): string {
   return `${sign}${numeric}${postfix.trim()}`;
 }
 
-function toStat(raw: RawAsset, key: string, elevated: boolean): Stat | null {
-  const prop = raw.properties?.[key];
+function toStat(raw: RawAsset, pick: Pick): Stat | null {
+  const prop = raw.properties?.[pick.key];
   if (!prop?.label || prop.value === undefined) return null;
 
   // 0 means it's granted by a later upgrade
@@ -92,12 +102,13 @@ function toStat(raw: RawAsset, key: string, elevated: boolean): Stat | null {
   const value = String(prop.value);
   const numeric = Number.parseFloat(value);
   if (numeric === 0) return null;
-  if (numeric < 0 && HEADER.includes(key)) return null;
+  if (numeric < 0 && HEADER.includes(pick.key)) return null;
 
   return {
     label: prop.label,
     value: display(value, prop.prefix, prop.postfix),
-    elevated,
+    elevated: pick.elevated,
+    group: pick.group,
   };
 }
 
@@ -108,7 +119,9 @@ export function sectionsFor(raw: RawAsset): Section[] {
     if (drafts.length === 0) drafts.push({ desc: "", picks: [] });
     const first = drafts[0];
     if (first) {
-      first.picks.unshift(...HEADER.map((key): Pick => [key, false]));
+      first.picks.unshift(
+        ...HEADER.map((key): Pick => ({ key, elevated: false })),
+      );
     }
   }
 
@@ -125,10 +138,10 @@ export function sectionsFor(raw: RawAsset): Section[] {
   for (const draft of drafts) {
     const stats: Stat[] = [];
 
-    for (const [key, elevated] of draft.picks) {
-      if (seen.has(key)) continue;
-      seen.add(key);
-      const stat = toStat(raw, key, elevated);
+    for (const pick of draft.picks) {
+      if (seen.has(pick.key)) continue;
+      seen.add(pick.key);
+      const stat = toStat(raw, pick);
       if (stat) stats.push(stat);
     }
 
