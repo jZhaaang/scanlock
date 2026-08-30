@@ -23,7 +23,10 @@ async function acquire(token: string): Promise<boolean> {
  */
 export async function sync(): Promise<boolean> {
   const token = `${Date.now()}`;
-  if (!(await acquire(token))) return false;
+  if (!(await acquire(token))) {
+    console.warn("sync skipped; another run holds the lock");
+    return false;
+  }
 
   const build = await latestBuild();
   if (String(build) === (await readCurrent())) {
@@ -31,6 +34,7 @@ export async function sync(): Promise<boolean> {
     return false;
   }
 
+  console.log(`syncing build ${build}`);
   await writeSnapshot(await buildSnapshot(build));
   await redis.del(LOCK);
   return true;
