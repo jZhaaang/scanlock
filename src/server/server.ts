@@ -12,6 +12,7 @@ import type {
 } from "@devvit/web/shared";
 import { isT1, isT3 } from "@devvit/web/shared";
 import { Endpoint, EndpointMethod, type ErrorRsp } from "../shared/api.ts";
+import { normalize } from "../shared/normalize.ts";
 import { extractTokens } from "../shared/reply/brackets.ts";
 import { renderReply } from "../shared/reply/render.ts";
 import { resolveAll } from "../shared/reply/resolve.ts";
@@ -19,6 +20,8 @@ import { readEntries, readHead } from "./store.ts";
 import { sync } from "./sync.ts";
 
 type AnyRsp = UiResponse | TriggerResponse | TaskResponse | ErrorRsp;
+
+const MAX_LOGGED_LENGTH = 40;
 
 export async function onReq(
   reqMsg: IncomingMessage,
@@ -104,12 +107,18 @@ async function respond(
     return {};
   }
 
-  // one bullet per token, take first id it lands on
-  const ids = resolveAll(tokens, head.index).flatMap((r) => r.ids.slice(0, 1));
-  if (!ids.length) {
-    console.warn(`no matches; id=${id} tokens=${tokens.length}`);
-    return {};
+  const results = resolveAll(tokens, head.index);
+  const ids = results.flatMap((r) => r.ids.slice(0, 1));
+
+  const missed = results.filter((r) => r.via === "none");
+  if (missed.length) {
+    const names = missed
+      .map((r) => normalize(r.token).slice(0, MAX_LOGGED_LENGTH))
+      .join(", ");
+    console.warn(`unmatched; id=${id} names=${names}`);
   }
+
+  if (!ids.length) return {};
 
   const entries = await readEntries(head.meta.build, ids);
   if (!entries.length) return {};
