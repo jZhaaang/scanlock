@@ -27,22 +27,6 @@ describe("sanitize strips", () => {
       "Press or now.",
     );
   });
-
-  it("attribute labels, keeping their text", () => {
-    assert.equal(
-      sanitize(
-        'Applies <span class="inline-attribute-label Slow">Slow</span>.',
-      ),
-      "Applies Slow.",
-    );
-  });
-
-  it("diminished text without emphasising it", () => {
-    assert.equal(
-      sanitize('Deals <span class="diminish">less</span> damage.'),
-      "Deals less damage.",
-    );
-  });
 });
 
 describe("sanitize emphasis", () => {
@@ -61,6 +45,22 @@ describe("sanitize emphasis", () => {
     ]) {
       assert.equal(sanitize(`<span class="${cls}">x</span>`), "**x**");
     }
+  });
+
+  it("bolds attribute labels", () => {
+    assert.equal(
+      sanitize(
+        'Applies <span class="inline-attribute-label Slow">Slow</span>.',
+      ),
+      "Applies **Slow**.",
+    );
+  });
+
+  it("italicizes diminished text", () => {
+    assert.equal(
+      sanitize('Deals <span class="diminish">less</span> damage.'),
+      "Deals *less* damage.",
+    );
   });
 
   it("keeps whitespace outside the markers", () => {
@@ -88,6 +88,13 @@ describe("sanitize emphasis", () => {
     assert.equal(
       sanitize('<span class="highlight">-30%</spawn> Move Speed'),
       "**-30%** Move Speed",
+    );
+  });
+
+  it("repeats emphasis on each line a span covers", () => {
+    assert.equal(
+      sanitize('<span class="diminish">One.<br>Two.</span>'),
+      "*One.*\n*Two.*",
     );
   });
 });
