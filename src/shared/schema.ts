@@ -2,12 +2,15 @@ export type EntryKind = "item" | "ability";
 export type ItemSlot = "weapon" | "spirit" | "vitality";
 export type SectionKind = "innate" | "passive" | "active";
 
+export type StatScale = { factor: number; source: string };
+
 export type Stat = {
   label: string;
   value: string;
   elevated: boolean;
   /** heading the game groups this stat under, abilities only */
   group?: string;
+  scale?: StatScale;
 };
 
 export type Section = {

@@ -6,6 +6,7 @@ import type {
   RawAsset,
   RawHero,
   RawProperty,
+  RawScaleFunction,
   RawShopItem,
 } from "./raw.ts";
 import { transform } from "./transform.ts";
@@ -190,6 +191,77 @@ describe("stat filtering", () => {
         ["E", true],
         ["P", false],
       ],
+    );
+  });
+});
+
+describe("stat scaling", () => {
+  const scaleOf = (fn: RawScaleFunction) =>
+    one([
+      item({
+        properties: { P: { value: "10", label: "Damage", scale_function: fn } },
+        tooltip_sections: [{ section_attributes: [{ properties: ["P"] }] }],
+      }),
+    ]).sections[0]?.stats[0]?.scale;
+
+  it("names the source from the stat type", () => {
+    assert.deepEqual(
+      scaleOf({ specific_stat_scale_type: "ETechPower", stat_scale: 0.42 }),
+      { factor: 0.42, source: "Spirit" },
+    );
+  });
+
+  it("falls back to the scaling class when no type is named", () => {
+    assert.deepEqual(
+      scaleOf({ class_name: "scale_function_tech_damage", stat_scale: 1.5 }),
+      { factor: 1.5, source: "Spirit" },
+    );
+  });
+
+  it("prefers the type, since a tech class also ships weapon scaling", () => {
+    assert.equal(
+      scaleOf({
+        class_name: "scale_function_tech_damage",
+        specific_stat_scale_type: "EWeaponDamageScale",
+        stat_scale: 0.93,
+      })?.source,
+      "Weapon",
+    );
+  });
+
+  it("names every source the game scales from", () => {
+    const source = (type: string) =>
+      scaleOf({ specific_stat_scale_type: type, stat_scale: 1 })?.source;
+    assert.equal(source("ELevelUpBoons"), "Boons");
+    assert.equal(source("ELightMeleeDamage"), "Melee");
+    assert.equal(source("EBaseWeaponDamageIncrease"), "Weapon");
+  });
+
+  it("reads weapon power as the multiplier its percent produces", () => {
+    assert.deepEqual(
+      scaleOf({ specific_stat_scale_type: "EWeaponPower", stat_scale: 125 }),
+      { factor: 2.25, source: "Weapon" },
+    );
+  });
+
+  it("keeps the sign of a scale that shrinks the value", () => {
+    assert.deepEqual(
+      scaleOf({ specific_stat_scale_type: "ETechCooldown", stat_scale: -1 }),
+      { factor: -1, source: "Spirit" },
+    );
+  });
+
+  it("ignores a stat that does not scale at all", () => {
+    assert.equal(
+      scaleOf({ specific_stat_scale_type: "ETechPower", stat_scale: 0 }),
+      undefined,
+    );
+  });
+
+  it("ignores a source it cannot name", () => {
+    assert.equal(
+      scaleOf({ specific_stat_scale_type: "ENotYetSeen", stat_scale: 2 }),
+      undefined,
     );
   });
 });

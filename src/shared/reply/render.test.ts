@@ -236,6 +236,42 @@ describe("stat groups", () => {
   });
 });
 
+describe("scaling badges", () => {
+  const badged = (factor: number, source: string) =>
+    lines(
+      ability({
+        sections: [
+          section({
+            stats: [stat("Damage", "24", { scale: { factor, source } })],
+          }),
+        ],
+      }),
+    )[1];
+
+  it("rides the multiplier beside the value it grows", () => {
+    assert.equal(badged(0.42, "Spirit"), "**24** ^(+0.42×Spirit) Damage");
+  });
+
+  it("names the source", () => {
+    assert.equal(badged(9, "Boons"), "**24** ^(+9×Boons) Damage");
+  });
+
+  it("keeps the sign, so a shrinking stat is not read as a growing one", () => {
+    assert.equal(badged(-0.055, "Spirit"), "**24** ^(-0.055×Spirit) Damage");
+  });
+
+  it("caps the decimals on a multiplier the payload ships in full", () => {
+    assert.equal(badged(0.609336, "Spirit"), "**24** ^(+0.6093×Spirit) Damage");
+  });
+
+  it("says nothing for a stat that does not scale", () => {
+    const entry = ability({
+      sections: [section({ stats: [stat("Damage", "24")] })],
+    });
+    assert.equal(lines(entry)[1], "**24** Damage");
+  });
+});
+
 describe("upgrades", () => {
   it("puts every tier on one line", () => {
     const entry = ability({

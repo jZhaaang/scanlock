@@ -1,9 +1,10 @@
-import type { Section, SectionKind, Stat } from "../schema.ts";
+import type { Section, SectionKind, Stat, StatScale } from "../schema.ts";
 import { sanitize } from "./markup.ts";
 import type {
   RawAbility,
   RawAsset,
   RawPropertyUpgrade,
+  RawScaleFunction,
   RawShopItem,
   RawTooltipSection,
 } from "./raw.ts";
@@ -31,6 +32,35 @@ const HEADINGS: Record<string, string> = {
 };
 
 /**
+ * What a scaling multiplier multiplies.
+ * EStatsCount is Mina's Rake alone, which is Spirit
+ */
+const SCALE_BY_TYPE: Record<string, string> = {
+  ETechPower: "Spirit",
+  ETechDuration: "Spirit",
+  ETechRange: "Spirit",
+  ETechCooldown: "Spirit",
+  EStatsCount: "Spirit",
+  ELevelUpBoons: "Boons",
+  EBaseWeaponDamageIncrease: "Weapon",
+  EWeaponDamageScale: "Weapon",
+  EWeaponFalloffMaxRange: "Weapon",
+  EWeaponPower: "Weapon",
+  EBulletDamage: "Weapon",
+  ELightMeleeDamage: "Melee",
+};
+
+/** Consulted only when the property names no stat type of its own */
+const SCALE_BY_CLASS: Record<string, string> = {
+  scale_function_tech_damage: "Spirit",
+  scale_function_healing_spirit_scale: "Spirit",
+  scale_function_tech_duration: "Spirit",
+  scale_function_tech_range: "Spirit",
+  scale_function_healing_boon_scale: "Boons",
+  scale_function_base_weapon_damage: "Weapon",
+};
+
+/**
  * A property key and whether the game gives it visual weight (we use it for ordering stats) and
  * the heading it sits under if the block carried one
  */
@@ -50,6 +80,24 @@ function resolved(text: string | undefined): string | undefined {
 
 function written(className: string): string {
   return DESCRIPTIONS[className]?.join("\n") ?? "";
+}
+
+/** Determine scaling for tooltip. stat_scale_type is the decider for scaling. */
+function scaleFor(fn: RawScaleFunction | undefined): StatScale | undefined {
+  const factor = fn?.stat_scale;
+  if (!fn || !factor) return undefined;
+
+  const type = fn.specific_stat_scale_type;
+  const source = type
+    ? SCALE_BY_TYPE[type]
+    : SCALE_BY_CLASS[fn.class_name ?? ""];
+  if (!source) return undefined;
+
+  // Specific to Paradox's Kinetic Carbine, ships as a percent increase
+  // e.g. min 25 => 1.25, max 125 => 2.25
+  if (type === "EWeaponPower") return { factor: 1 + factor / 100, source };
+
+  return { factor, source };
 }
 
 /** Determine type for tooltip. Missing `section_type` and descriptive text means it's innate bonuses */
@@ -140,6 +188,7 @@ function toStat(raw: RawAsset, pick: Pick): Stat | null {
     value: display(value, prop.prefix, prop.postfix),
     elevated: pick.elevated,
     group: pick.group,
+    scale: scaleFor(prop.scale_function),
   };
 }
 

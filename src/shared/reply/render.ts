@@ -17,6 +17,16 @@ function link(name: string): string {
 }
 
 /**
+ * Scaling multiplier beside a value, superscripted beside the original value.
+ */
+function badge(stat: Stat): string {
+  if (!stat.scale) return "";
+  const factor = Number(stat.scale.factor.toFixed(4));
+  const sign = factor < 0 ? "" : "+";
+  return ` ^(${sign}${factor}×${stat.scale.source})`;
+}
+
+/**
  * "**+17%** Bullet Resists, **35m** Radius", introducing a heading whever the game groups the numbers
  * that follow it: "Cost of Stay: **75** Damage"
  */
@@ -31,7 +41,7 @@ function statLine(stats: Stat[]): string {
   let group: string | undefined;
 
   for (const stat of ordered) {
-    const text = `**${stat.value}** ${stat.label}`;
+    const text = `**${stat.value}**${badge(stat)} ${stat.label}`;
     if (stat.group === group) {
       parts.push(text);
       continue;

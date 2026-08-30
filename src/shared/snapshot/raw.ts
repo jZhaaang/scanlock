@@ -1,8 +1,16 @@
+/** How an ability/item stat value scales */
+export type RawScaleFunction = {
+  class_name?: string;
+  specific_stat_scale_type?: string;
+  stat_scale?: number;
+};
+
 export type RawProperty = {
   value?: string | number;
   label?: string;
   prefix?: string;
   postfix?: string;
+  scale_function?: RawScaleFunction;
 };
 
 export type RawSectionAttribute = {
