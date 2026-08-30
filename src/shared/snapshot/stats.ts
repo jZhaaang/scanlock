@@ -16,6 +16,21 @@ const HEADER = [
 ];
 
 /**
+ * Hard-coded descriptions/headings because the API cannot resolve the key.
+ * Remove once API returns it
+ */
+const DESCRIPTIONS: Record<string, string[]> = {
+  ability_vampirebat_steallife: [
+    "*Active:* Slash with your umbrella, dealing **spirit damage**, increasing with their missing health. Receive a **heal** for every target killed.",
+    "*Passive:* Holding **Zoom / alt-fire** causes you to briefly float.",
+    "*Rake executes non-heroes below 60 health.*",
+  ],
+};
+const HEADINGS: Record<string, string> = {
+  "#ability_doorman_bomb_explosion": "Explosion",
+};
+
+/**
  * A property key and whether the game gives it visual weight (we use it for ordering stats) and
  * the heading it sits under if the block carried one
  */
@@ -23,11 +38,27 @@ type Pick = { key: string; elevated: boolean; group?: string };
 /** One section before its keys have been resolved against `properties` */
 type Draft = { kind?: SectionKind; desc: string; picks: Pick[] };
 
+/**
+ * The API hands back the key itself when it cannot resolve a string
+ * i.e. #ability_vampirebat_steallife_desc
+ * Treat it as absent so reader never sees a variable name instead
+ */
+function resolved(text: string | undefined): string | undefined {
+  if (!text?.startsWith("#")) return text;
+  return HEADINGS[text];
+}
+
+function written(className: string): string {
+  return DESCRIPTIONS[className]?.join("\n") ?? "";
+}
+
 /** Determine type for tooltip. Missing `section_type` and descriptive text means it's innate bonuses */
 function kindFor(section: RawTooltipSection): SectionKind {
   const type = section.section_type;
   if (type === "innate" || type === "passive" || type === "active") return type;
-  const hasText = (section.section_attributes ?? []).some((a) => a.loc_string);
+  const hasText = (section.section_attributes ?? []).some((a) =>
+    resolved(a.loc_string),
+  );
   return hasText ? "passive" : "innate";
 }
 
@@ -45,7 +76,7 @@ function itemDrafts(raw: RawShopItem): Draft[] {
         picks.push({ key, elevated: true });
       for (const key of attr.properties ?? [])
         picks.push({ key, elevated: false });
-      if (!desc) desc = sanitize(attr.loc_string);
+      if (!desc) desc = sanitize(resolved(attr.loc_string));
     }
 
     drafts.push({ kind: kindFor(section), desc, picks });
@@ -61,7 +92,7 @@ function abilityDrafts(raw: RawAbility): Draft[] {
     const picks: Pick[] = [];
 
     for (const block of section.properties_block ?? []) {
-      const group = block.loc_string?.trim();
+      const group = resolved(block.loc_string?.trim());
       for (const prop of block.properties ?? []) {
         const key = prop.important_property;
         if (!key) continue;
@@ -73,7 +104,7 @@ function abilityDrafts(raw: RawAbility): Draft[] {
     for (const key of section.basic_properties ?? [])
       picks.push({ key, elevated: false });
 
-    drafts.push({ desc: sanitize(section.loc_string), picks });
+    drafts.push({ desc: sanitize(resolved(section.loc_string)), picks });
   }
 
   return drafts;
@@ -126,8 +157,9 @@ export function sectionsFor(raw: RawAsset): Section[] {
   }
 
   // Leech and Golden Goose Egg carry their only description here
+  // Rake is hard-coded through written() as it's missing in the API
   if (!drafts.some((d) => d.desc)) {
-    const fallback = sanitize(raw.description?.desc);
+    const fallback = sanitize(raw.description?.desc) || written(raw.class_name);
     const first = drafts[0];
     if (fallback && first) first.desc = fallback;
   }
