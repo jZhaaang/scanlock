@@ -38,7 +38,7 @@ function statLine(stats: Stat[]): string {
     }
     group = stat.group;
     // headings are inconsistent about carrying their own colon
-    parts.push(group ? `${group.replace(/:$/, "")}: ${text}` : text);
+    parts.push(group ? `*${group.replace(/:$/, "")}:* ${text}` : text);
   }
 
   return parts.join(", ");
@@ -54,14 +54,14 @@ function inline(text: string): string {
 function header(entry: Entry): string {
   if (entry.kind === "ability") {
     const hero = entry.hero ? ` ${entry.hero} ${entry.abilitySlot}` : "";
-    return `${link(entry.name)} | [Ability]${hero}`;
+    return `${link(entry.name)} | **[Ability]**${hero}`;
   }
 
   const slot = entry.slot ? `${capitalize(entry.slot)} Item` : "Item";
   const cost = entry.legendary
     ? "Street Brawl Legendary"
     : `Tier ${entry.tier}, ${entry.cost} Souls`;
-  return `${link(entry.name)} | [${slot}] ${cost}`;
+  return `${link(entry.name)} | **[${slot}]** ${cost}`;
 }
 
 /**

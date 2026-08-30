@@ -56,7 +56,7 @@ describe("header", () => {
   it("names an item with its slot, tier, and cost", () => {
     assert.equal(
       lines(item({ name: "Monster Rounds", cost: 800, tier: 1 }))[0],
-      "[Monster Rounds](https://deadlock.wiki/Monster_Rounds) | [Weapon Item] Tier 1, 800 Souls",
+      "[Monster Rounds](https://deadlock.wiki/Monster_Rounds) | **[Weapon Item]** Tier 1, 800 Souls",
     );
   });
 
@@ -73,7 +73,7 @@ describe("header", () => {
 
   it("says street brawl instead of a price for a legendary", () => {
     const head = lines(item({ tier: 5, cost: 9999, legendary: true }))[0] ?? "";
-    assert.match(head, /\[Weapon Item\] Street Brawl Legendary$/);
+    assert.match(head, /\*\*\[Weapon Item\]\*\* Street Brawl Legendary$/);
   });
 
   it("names an ability with its hero and slot", () => {
@@ -81,7 +81,7 @@ describe("header", () => {
       lines(
         ability({ name: "Hotel Guest", hero: "The Doorman", abilitySlot: 4 }),
       )[0],
-      "[Hotel Guest](https://deadlock.wiki/Hotel_Guest) | [Ability] The Doorman 4",
+      "[Hotel Guest](https://deadlock.wiki/Hotel_Guest) | **[Ability]** The Doorman 4",
     );
   });
 });
@@ -176,7 +176,7 @@ describe("stat groups", () => {
     });
     assert.equal(
       lines(entry)[1],
-      "Cost of Stay: **75** Damage, Failure to Check-Out: **125** Damage",
+      "*Cost of Stay:* **75** Damage, *Failure to Check-Out:* **125** Damage",
     );
   });
 
@@ -191,7 +191,7 @@ describe("stat groups", () => {
         }),
       ],
     });
-    assert.equal(lines(entry)[1], "On Wall Hit: **1s** Stun, **40%** Slow");
+    assert.equal(lines(entry)[1], "*On Wall Hit:* **1s** Stun, **40%** Slow");
   });
 
   it("does not double a colon the heading already carries", () => {
@@ -200,7 +200,7 @@ describe("stat groups", () => {
         section({ stats: [stat("Damage", "30", { group: "On Hit:" })] }),
       ],
     });
-    assert.equal(lines(entry)[1], "On Hit: **30** Damage");
+    assert.equal(lines(entry)[1], "*On Hit:* **30** Damage");
   });
 
   it("puts ungrouped stats first, so a heading cannot appear to cover them", () => {
@@ -214,7 +214,7 @@ describe("stat groups", () => {
         }),
       ],
     });
-    assert.equal(lines(entry)[1], "**5m** Range, On Hit: **30** Damage");
+    assert.equal(lines(entry)[1], "**5m** Range, *On Hit:* **30** Damage");
   });
 
   it("keeps a group together when another follows it", () => {
@@ -229,7 +229,10 @@ describe("stat groups", () => {
         }),
       ],
     });
-    assert.equal(lines(entry)[1], "A: **1** Damage, **2** Slow, B: **3** Stun");
+    assert.equal(
+      lines(entry)[1],
+      "*A:* **1** Damage, **2** Slow, *B:* **3** Stun",
+    );
   });
 });
 
