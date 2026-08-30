@@ -1,28 +1,35 @@
-## Devvit Bare Template
+# Scanlock
 
-A practical [Devvit](https://developers.reddit.com/) app template with few dependencies. A little simpler at the expense of a little code.
+A Reddit bot for [/r/DeadlockTheGame](https://www.reddit.com/r/DeadlockTheGame/). Write an item or ability name in double brackets `[[ ]]` and it replies with that asset's current stats.
 
-## Getting Started
+Up to five lookups per comment, names are matched loosely.
 
-> Make sure you have Node 22 downloaded on your machine before running!
+## How it works
 
-1. Run `npm create devvit@latest --template=bare`
-2. Go through the installation wizard. You will need to create a Reddit account and connect it to Reddit Developers.
+Item and ability data comes from [deadlock-api.com](https://deadlock-api.com). A scheduled task checks hourly for a new game build and, when it finds one, rebuilds a snapshot into Redis under versioned keys.
 
-## Commands
+Every comment and post in the subreddit is scanned for bracket tokens. A comment with no tokens never touches Redis.
 
-- `npm run playtest [r/sub]`: watches changes, builds, uploads, and installs on Reddit. Accepts an optional subreddit.
-- `npm run build`: builds client and server, including esbuild metafiles.
-- `npm run clean`: removes build outputs.
-- `npm run test`: runs all tests.
-- `npm run format`: fixes lints and formatting.
-- `npm run lint`: checks lints and formatting.
-- `npm run publish`: cleans, builds, uploads, and files a new app review request.
+## Layout
 
-## Features
+```
+src/
+  server/       triggers, Redis reads and writes, snapshot sync
+  shared/
+    snapshot/   fetch the API, strip the client's markup, shape the stats
+    reply/      finds tokens, resolve names, render reply with markdown
+  tools/        build a snapshot to disk for inspection
+```
 
-- A plain Node.js server with front and backend typing.
-- Tests using the builtin Node.js test runner.
-- Promise misuse linter.
-- Formatter and bundler.
-- TypeScript project skeleton split by environment (frontend, backend, test, etc).
+### Commands
+
+- `npm run playtest [r/sub]`: watches changes, builds, uploads, and installs on Reddit
+- `npm run build`: builds the server
+- `npm run test`: types, lints, unit tests, and a build
+- `npm run format`: fixes lints and formatting
+- `npm run build-snapshot`: writes a snapshot to `data/`
+- `npm run publish`: cleans, builds, uploads, and files a new app review request
+
+## Notes
+
+Not affiliated with Valve. Deadlock is in development and its data changes often. The reply footer names the build the information comes from.
