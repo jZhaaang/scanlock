@@ -106,7 +106,10 @@ async function respond(
 
   // one bullet per token, take first id it lands on
   const ids = resolveAll(tokens, head.index).flatMap((r) => r.ids.slice(0, 1));
-  if (!ids.length) return {};
+  if (!ids.length) {
+    console.warn(`no matches; id=${id} tokens=${tokens.length}`);
+    return {};
+  }
 
   const entries = await readEntries(head.meta.build, ids);
   if (!entries.length) return {};
