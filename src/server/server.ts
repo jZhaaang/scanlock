@@ -111,12 +111,12 @@ async function respond(
   const entries = await readEntries(head.meta.build, ids);
   if (!entries.length) return {};
 
-  console.log(`id=${id} tokens=${tokens.length} replied=${entries.length}`);
   await reddit.submitComment({
     id,
     text: renderReply(entries, head.meta),
     runAs: "APP",
   });
+  console.log(`id=${id} tokens=${tokens.length} replied=${entries.length}`);
   return {};
 }
 
