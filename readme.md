@@ -30,6 +30,10 @@ src/
 - `npm run build-snapshot`: writes a snapshot to `data/`
 - `npm run publish`: cleans, builds, uploads, and files a new app review request
 
+## Changelog
+
+- 0.0.1 - Initial Release
+
 ## Notes
 
 Not affiliated with Valve. Deadlock is in development and its data changes often. The reply footer names the build the information comes from.
