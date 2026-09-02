@@ -310,6 +310,33 @@ describe("upgrades", () => {
   it("says nothing when an entry has no upgrades", () => {
     assert.equal(lines(item()).length, 1);
   });
+
+  it("italicises a tier's condition lead-in", () => {
+    const entry = ability({
+      upgrades: [{ tier: 2, text: "On Hero Hit: Gain 2x weapon range" }],
+    });
+    assert.equal(
+      lines(entry)[1],
+      "**[Tier 2]** *On Hero Hit:* Gain 2x weapon range",
+    );
+  });
+
+  it("trims the space the game leaves before the colon", () => {
+    const entry = ability({
+      upgrades: [{ tier: 1, text: "On Hit : +10 Damage" }],
+    });
+    assert.equal(lines(entry)[1], "**[Tier 1]** *On Hit:* +10 Damage");
+  });
+
+  it("only marks a lead-in at the very start", () => {
+    const entry = ability({
+      upgrades: [{ tier: 3, text: "Deals damage. On Hit: +10 Damage" }],
+    });
+    assert.equal(
+      lines(entry)[1],
+      "**[Tier 3]** Deals damage. On Hit: +10 Damage",
+    );
+  });
 });
 
 describe("renderReply", () => {

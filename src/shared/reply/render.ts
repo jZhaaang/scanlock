@@ -7,6 +7,8 @@ const WIKI = "https://deadlock.wiki/";
  * A blank line would end a bullet list
  */
 const BREAK = "  \n  ";
+/** For the leading descriptors in ability upgrades (On Hero Hit:, etc.) */
+const LEAD_IN = /^([A-Z][^:.\n*]{0,32}):\s/;
 
 function capitalize(word: string): string {
   return word.charAt(0).toUpperCase() + word.slice(1);
@@ -14,6 +16,13 @@ function capitalize(word: string): string {
 
 function link(name: string): string {
   return `[${name}](${WIKI}${encodeURI(name.replace(/ /g, "_"))})`;
+}
+
+function leadIn(text: string): string {
+  return text.replace(
+    LEAD_IN,
+    (_whole, label: string) => `*${label.trim()}:* `,
+  );
 }
 
 /**
@@ -103,7 +112,7 @@ function renderUpgrades(entry: Entry): string {
       const body =
         upgrade.text ??
         (upgrade.changes ?? []).map((c) => `${c.value} ${c.label}`).join(", ");
-      return `**[Tier ${upgrade.tier}]** ${inline(body)}`;
+      return `**[Tier ${upgrade.tier}]** ${leadIn(inline(body))}`;
     })
     .join(" ");
 }
