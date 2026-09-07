@@ -19,7 +19,7 @@
     "publish": "npm run clean && npm run build && devvit publish"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.10",
+    "@biomejs/biome": "2.5.12",
     "@devvit/web": "0.14.1",
     "@types/node": "24.13.3",
     "devvit": "0.14.1",
